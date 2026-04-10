@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARK OSAMA | VISUAL DIRECTOR</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://player.vimeo.com/api/player.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #030303;
+            --accent: #00f2fe;
+            --font-display: 'Syne', sans-serif;
+            --font-main: 'Inter', sans-serif;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; scroll-behavior: smooth; }
+        body { background: var(--bg); color: #fff; font-family: var(--font-main); overflow-x: hidden; }
+
+        /* --- Cursor --- */
+        #cursor { position: fixed; width: 8px; height: 8px; background: #fff; border-radius: 50%; pointer-events: none; z-index: 10000; mix-blend-mode: difference; }
+        #cursor-follower { position: fixed; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; pointer-events: none; z-index: 9999; transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        /* --- Header --- */
+        header { 
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; display: flex; align-items: center; gap: 30px;
+            padding: 10px 30px; background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(15px);
+            border-radius: 100px; border: 1px solid var(--border); width: fit-content;
+        }
+        .logo-img { width: 35px; height: auto; filter: drop-shadow(0 0 5px var(--accent)); }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-link { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; transition: 0.3s; }
+        .nav-link:hover { color: var(--accent); }
+
+        /* --- Hero --- */
+        .hero { position: relative; height: 100vh; display: flex; align-items: center; padding: 0 8%; overflow: hidden; }
+        .hero-bg-video { position: absolute; inset: 0; z-index: -1; background: #000; }
+        .hero-bg-video iframe {
+            width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            opacity: 0.6;
+        }
+        .hero h1 { font-family: var(--font-display); font-size: clamp(3rem, 10vw, 7rem); line-height: 0.85; text-transform: uppercase; }
+        .hollow { -webkit-text-stroke: 1px rgba(255,255,255,0.3); -webkit-text-fill-color: transparent; }
+
+        /* --- About --- */
+        .about-sec { padding: 120px 8%; display: flex; align-items: center; gap: 60px; background: #050505; }
+        .about-logo { width: 180px; height: 180px; background: var(--glass); border: 1px solid var(--border); border-radius: 30px; display: flex; align-items: center; justify-content: center; }
+        .about-logo img { width: 100px; filter: drop-shadow(0 0 15px var(--accent)); }
+        .about-text h2 { font-family: var(--font-display); font-size: 3rem; margin-bottom: 20px; }
+        .about-text p { color: #888; max-width: 600px; line-height: 1.6; margin-bottom: 30px; font-size: 0.9rem; }
+        .stats { display: flex; gap: 40px; }
+        .stat-val { font-family: var(--font-display); font-size: 2.5rem; color: var(--accent); display: block; }
+        .stat-lab { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.5; }
+
+        /* --- Filters & Grid --- */
+        .filters { padding: 40px 8% 20px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+        .filter-btn { background: none; border: 1px solid var(--border); color: #fff; padding: 8px 18px; border-radius: 50px; font-size: 0.65rem; font-weight: 600; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .filter-btn.active, .filter-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .portfolio { padding: 0 8% 100px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; align-items: start; }
+        .project-card { background: var(--glass); border-radius: 15px; padding: 10px; border: 1px solid var(--border); transition: 0.4s; height: fit-content; }
+        .project-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        
+        /* المقاسات */
+        .video-container { position: relative; width: 100%; overflow: hidden; border-radius: 10px; background: #000; }
+        .ratio-16-9 { aspect-ratio: 16/9; }
+        .ratio-9-16 { aspect-ratio: 9/16; }
+        
+        .video-container iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+        .card-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .project-card:hover .card-overlay { opacity: 1; }
+
+        /* --- Lightbox --- */
+        #lightbox { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; justify-content: center; align-items: center; }
+        .close-video-btn { position: absolute; top: 30px; right: 30px; background: var(--accent); color: #000; border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20001; }
+
+        /* --- Footer --- */
+        .contact-links { display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+        .c-link { text-decoration: none; color: #fff; border: 1px solid var(--border); padding: 12px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; transition: 0.3s; background: var(--glass); }
+        .c-link:hover { background: #fff; color: #000; }
+
+        /* --- Admin Panel (Mouse Visible Here) --- */
+        #admin-panel { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 30000; display: none; padding: 50px; overflow-y: auto; cursor: default !important; }
+        #admin-panel * { cursor: auto !important; } /* إظهار الماوس الطبيعي في لوحة الأدمن */
+        .admin-box { max-width: 500px; margin: 0 auto; background: #111; padding: 30px; border-radius: 20px; border: 1px solid var(--accent); }
+        .admin-input, .admin-select { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-family: var(--font-main); }
+        .admin-trigger { position: fixed; bottom: 15px; left: 15px; font-size: 0.5rem; opacity: 0.1; text-decoration: none; color: #fff; z-index: 5000; }
+
+        @media (max-width: 768px) {
+            .about-sec { flex-direction: column; text-align: center; }
+            .portfolio { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+
+    <header>
+        <img src="mark.PNG" alt="Logo" class="logo-img">
+        <nav class="nav-links">
+            <a href="#about" class="nav-link">About</a>
+            <a href="#portfolio" class="nav-link">Work</a>
+            <a href="#contact" class="nav-link">Contact</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-bg-video">
+            <iframe src="https://player.vimeo.com/video/1097324794?background=1&autoplay=1&loop=1&muted=1" frameborder="0"></iframe>
+        </div>
+        <h1>Visual <br> <span class="hollow">Director.</span></h1>
+    </section>
+
+    <section id="about" class="about-sec">
+        <div class="about-logo"><img src="mark.PNG" alt="Mark Osama"></div>
+        <div class="about-text">
+            <h2>MARK OSAMA</h2>
+            <p>Visual Director & Editor specializing in high-end cinematic post-production. Delivering powerful visual stories for 3+ years.</p>
+            <div class="stats">
+                <div class="stat-item"><span class="stat-val">03+</span><span class="stat-lab">Years Exp.</span></div>
+                <div class="stat-item"><span class="stat-val">1K+</span><span class="stat-lab">Projects</span></div>
+            </div>
+        </div>
+    </section>
+
+    <div id="portfolio" style="padding-top: 50px;">
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterWork('all')">ALL</button>
+            <button class="filter-btn" onclick="filterWork('social')">SOCIAL REELS</button>
+            <button class="filter-btn" onclick="filterWork('storytelling')">STORYTELLING</button>
+            <button class="filter-btn" onclick="filterWork('motion')">MOTION</button>
+            <button class="filter-btn" onclick="filterWork('3d')">3D</button>
+            <button class="filter-btn" onclick="filterWork('auto')">AUTO</button>
+        </div>
+        <section class="portfolio" id="grid"></section>
+    </div>
+
+    <footer id="contact" style="padding: 80px 8%; text-align: center; border-top: 1px solid var(--border);">
+        <div class="contact-links">
+            <a href="https://wa.me/201098119039" target="_blank" class="c-link">WhatsApp</a>
+            <a href="https://instagram.com/mark_usama._" target="_blank" class="c-link">Instagram</a>
+            <a href="https://www.facebook.com/markusama.40/" target="_blank" class="c-link">Facebook</a>
+        </div>
+        <p style="margin-top: 40px; opacity: 0.2; font-size: 0.6rem;">© 2024 MARK OSAMA</p>
+    </footer>
+
+    <div id="lightbox">
+        <button class="close-video-btn" onclick="closeVideo()">✕</button>
+        <div id="v-container" style="width:90%; height:85%;"></div>
+    </div>
+
+    <a href="javascript:void(0)" class="admin-trigger" onclick="openAdmin()">ADMIN</a>
+    <div id="admin-panel">
+        <div class="admin-box">
+            <h2 style="color:var(--accent); margin-bottom:15px;">Add New Work</h2>
+            <input type="text" id="p-title" class="admin-input" placeholder="Project Title">
+            <input type="text" id="p-id" class="admin-input" placeholder="Vimeo Video ID">
+            <select id="p-cat" class="admin-select">
+                <option value="social">Social Reels</option>
+                <option value="storytelling">Storytelling</option>
+                <option value="motion">Motion</option>
+                <option value="3d">3D</option>
+                <option value="auto">Auto</option>
+            </select>
+            <select id="p-ratio" class="admin-select">
+                <option value="ratio-16-9">Landscape (16:9)</option>
+                <option value="ratio-9-16">Portrait (9:16)</option>
+            </select>
+            <button class="c-link" onclick="addProject()" style="width:100%; margin-top:10px; border-color:var(--accent);">SAVE PROJECT</button>
+            <div id="admin-list" style="margin-top:20px; max-height:200px; overflow:auto;"></div>
+            <button onclick="closeAdmin()" style="width:100%; background:none; color:#555; border:none; margin-top:15px; cursor: pointer;">Exit Panel</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mark-portfolio-2cab1-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database().ref('projects');
+
+        const c1 = document.getElementById('cursor');
+        const c2 = document.getElementById('cursor-follower');
+        let mX = 0, mY = 0, fX = 0, fY = 0;
+        document.addEventListener('mousemove', e => { 
+            mX = e.clientX; mY = e.clientY; 
+            c1.style.left = mX+'px'; c1.style.top = mY+'px';
+        });
+        function animate() {
+            fX += (mX - fX) * 0.1; fY += (mY - fY) * 0.1;
+            c2.style.left = (fX - 20)+'px'; c2.style.top = (fY - 20)+'px';
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        let allProjects = [];
+        function load() {
+            db.on('value', snap => {
+                allProjects = [];
+                const data = snap.val();
+                if(data) Object.keys(data).forEach(key => allProjects.push({ key, ...data[key] }));
+                render('all');
+                renderAdminList();
+            });
+        }
+
+        function render(filter) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            const filtered = filter === 'all' ? allProjects : allProjects.filter(p => p.category === filter);
+            filtered.reverse().forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'project-card';
+                div.innerHTML = `
+                    <div class="video-container ${p.ratio || 'ratio-16-9'}">
+                        <div class="card-overlay"><button class="c-link" style="font-size:0.6rem; padding:8px 15px;" onclick="openVideo('${p.id}')">WATCH</button></div>
+                        <iframe src="https://player.vimeo.com/video/${p.id}?background=1&autoplay=1&muted=1&loop=1"></iframe>
+                    </div>
+                    <div style="margin-top:10px; font-size:0.55rem; letter-spacing:1px; color:var(--accent); font-weight:700;">${p.title.toUpperCase()}</div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function filterWork(cat) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            render(cat);
+        }
+
+        function openVideo(id) {
+            document.getElementById('v-container').innerHTML = `<iframe src="https://player.vimeo.com/video/${id}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen"></iframe>`;
+            document.getElementById('lightbox').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        function closeVideo() {
+            document.getElementById('lightbox').style.display = 'none';
+            document.getElementById('v-container').innerHTML = '';
+            document.body.style.overflow = 'auto';
+        }
+
+        function openAdmin() { if(prompt("Password:") === "mark2024") document.getElementById('admin-panel').style.display = 'block'; }
+        function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+        
+        function addProject() {
+            const title = document.getElementById('p-title').value;
+            const id = document.getElementById('p-id').value;
+            const category = document.getElementById('p-cat').value;
+            const ratio = document.getElementById('p-ratio').value;
+            if(title && id) {
+                db.push({ title, id, category, ratio });
+                document.getElementById('p-title').value = '';
+                document.getElementById('p-id').value = '';
+            }
+        }
+        function deleteProj(key) { if(confirm("Delete?")) db.child(key).remove(); }
+        function renderAdminList() {
+            const list = document.getElementById('admin-list');
+            list.innerHTML = '';
+            allProjects.forEach(p => {
+                list.innerHTML += `<div style="display:flex; justify-content:space-between; font-size:0.7rem; padding:8px; border-bottom:1px solid #222;">
+                    ${p.title} <button onclick="deleteProj('${p.key}')" style="color:red; background:none; border:none;">✕</button>
+                </div>`;
+            });
+        }
+        window.onload = load;
+    </script>
+</body>
+</html>
