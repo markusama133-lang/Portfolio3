@@ -7,6 +7,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://player.vimeo.com/api/player.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
@@ -45,20 +46,28 @@
         .hero-bg-video iframe {
             width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh;
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            opacity: 0.6;
+            opacity: 0.6; pointer-events: none;
         }
         .hero h1 { font-family: var(--font-display); font-size: clamp(3rem, 10vw, 7rem); line-height: 0.85; text-transform: uppercase; }
         .hollow { -webkit-text-stroke: 1px rgba(255,255,255,0.3); -webkit-text-fill-color: transparent; }
 
         /* --- About --- */
         .about-sec { padding: 120px 8%; display: flex; align-items: center; gap: 60px; background: #050505; }
-        .about-logo { width: 180px; height: 180px; background: var(--glass); border: 1px solid var(--border); border-radius: 30px; display: flex; align-items: center; justify-content: center; }
+        .about-logo { width: 180px; height: 180px; background: var(--glass); border: 1px solid var(--border); border-radius: 30px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .about-logo img { width: 100px; filter: drop-shadow(0 0 15px var(--accent)); }
         .about-text h2 { font-family: var(--font-display); font-size: 3rem; margin-bottom: 20px; }
         .about-text p { color: #888; max-width: 600px; line-height: 1.6; margin-bottom: 30px; font-size: 0.9rem; }
-        .stats { display: flex; gap: 40px; }
+        .stats { display: flex; gap: 40px; margin-bottom: 30px; }
         .stat-val { font-family: var(--font-display); font-size: 2.5rem; color: var(--accent); display: block; }
         .stat-lab { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.5; }
+
+        /* --- Skills Section --- */
+        .skills-container { max-width: 600px; margin-top: 20px; }
+        .skill-item { margin-bottom: 18px; }
+        .skill-info { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .skill-info span:last-child { color: var(--accent); }
+        .skill-bar { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; position: relative; }
+        .skill-fill { height: 100%; background: linear-gradient(90deg, #00f2fe, #4facfe); border-radius: 10px; transition: width 1s ease-in-out; }
 
         /* --- Filters & Grid --- */
         .filters { padding: 40px 8% 20px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
@@ -69,13 +78,30 @@
         .project-card { background: var(--glass); border-radius: 15px; padding: 10px; border: 1px solid var(--border); transition: 0.4s; height: fit-content; }
         .project-card:hover { border-color: var(--accent); transform: translateY(-5px); }
         
-        /* المقاسات */
-        .video-container { position: relative; width: 100%; overflow: hidden; border-radius: 10px; background: #000; }
+        /* المقاسات مع تحسين التجاوب للإخفاء */
+        .video-container { 
+            position: relative; 
+            width: 100%; 
+            overflow: hidden; 
+            border-radius: 10px; 
+            background: #000; 
+        }
         .ratio-16-9 { aspect-ratio: 16/9; }
         .ratio-9-16 { aspect-ratio: 9/16; }
         
-        .video-container iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
-        .card-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        /* تكبير الـ iframe وقصه لتغطية وتطبيش شاشة تسجيل الدخول وأزرار Vimeo */
+        .video-container iframe { 
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 130%;
+            height: 130%;
+            transform: translate(-50%, -50%);
+            border: none; 
+            pointer-events: none; 
+            object-fit: cover;
+        }
+        .card-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; display: flex; align-items: center; justify-content: center; transition: 0.3s; z-index: 10; }
         .project-card:hover .card-overlay { opacity: 1; }
 
         /* --- Lightbox --- */
@@ -89,7 +115,7 @@
 
         /* --- Admin Panel (Mouse Visible Here) --- */
         #admin-panel { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 30000; display: none; padding: 50px; overflow-y: auto; cursor: default !important; }
-        #admin-panel * { cursor: auto !important; } /* إظهار الماوس الطبيعي في لوحة الأدمن */
+        #admin-panel * { cursor: auto !important; }
         .admin-box { max-width: 500px; margin: 0 auto; background: #111; padding: 30px; border-radius: 20px; border: 1px solid var(--accent); }
         .admin-input, .admin-select { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-family: var(--font-main); }
         .admin-trigger { position: fixed; bottom: 15px; left: 15px; font-size: 0.5rem; opacity: 0.1; text-decoration: none; color: #fff; z-index: 5000; }
@@ -106,7 +132,7 @@
     <div id="cursor-follower"></div>
 
     <header>
-        <img src="erasebg-transformed.png" alt="Logo" class="logo-img">
+        <img src="mark.png" alt="Logo" class="logo-img">
         <nav class="nav-links">
             <a href="#about" class="nav-link">About</a>
             <a href="#portfolio" class="nav-link">Work</a>
@@ -116,19 +142,40 @@
 
     <section class="hero">
         <div class="hero-bg-video">
-            <iframe src="https://player.vimeo.com/video/1097324794?background=1&autoplay=1&loop=1&muted=1" frameborder="0"></iframe>
+            <iframe src="https://player.vimeo.com/video/1097324794?background=1&autoplay=1&loop=1&muted=1&quality=720p" frameborder="0" allow="autoplay; fullscreen"></iframe>
         </div>
         <h1>Visual <br> <span class="hollow">Director.</span></h1>
     </section>
 
     <section id="about" class="about-sec">
-        <div class="about-logo"><img src="erasebg-transformed.png" alt="Mark Osama"></div>
+        <div class="about-logo"><img src="mark.png" alt="Mark Osama"></div>
         <div class="about-text">
             <h2>MARK OSAMA</h2>
             <p>Visual Director & Editor specializing in high-end cinematic post-production. Delivering powerful visual stories for 3+ years.</p>
             <div class="stats">
                 <div class="stat-item"><span class="stat-val">03+</span><span class="stat-lab">Years Exp.</span></div>
                 <div class="stat-item"><span class="stat-val">1K+</span><span class="stat-lab">Projects</span></div>
+            </div>
+
+            <div class="skills-container">
+                <div class="skill-item">
+                    <div class="skill-info">
+                        <span>Adobe Premiere Pro</span>
+                        <span>90%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" style="width: 90%;"></div>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-info">
+                        <span>Adobe After Effects</span>
+                        <span>40%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" style="width: 40%;"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -247,7 +294,19 @@
             document.body.style.overflow = 'auto';
         }
 
-        function openAdmin() { if(prompt("Password:") === "mark2024") document.getElementById('admin-panel').style.display = 'block'; }
+        // SHA-256 Hash for password "mark2024"
+        const ADMIN_HASH = "8ba7645d9e525a8167f226d7c7daeb1d167ef0d55e8841a0e7a8fbbf111664d0";
+        function openAdmin() { 
+            const inputPass = prompt("Password:");
+            if (inputPass) {
+                const inputHash = CryptoJS.SHA256(inputPass).toString();
+                if (inputHash === ADMIN_HASH) {
+                    document.getElementById('admin-panel').style.display = 'block';
+                } else {
+                    alert("Incorrect Password!");
+                }
+            }
+        }
         function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
         
         function addProject() {
