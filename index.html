@@ -89,7 +89,6 @@
         .ratio-16-9 { aspect-ratio: 16/9; }
         .ratio-9-16 { aspect-ratio: 9/16; }
         
-        /* تكبير الـ iframe وقصه لتغطية وتطبيش شاشة تسجيل الدخول وأزرار Vimeo */
         .video-container iframe { 
             position: absolute;
             top: 50%;
@@ -113,7 +112,7 @@
         .c-link { text-decoration: none; color: #fff; border: 1px solid var(--border); padding: 12px 25px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; transition: 0.3s; background: var(--glass); }
         .c-link:hover { background: #fff; color: #000; }
 
-        /* --- Admin Panel (Mouse Visible Here) --- */
+        /* --- Admin Panel --- */
         #admin-panel { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 30000; display: none; padding: 50px; overflow-y: auto; cursor: default !important; }
         #admin-panel * { cursor: auto !important; }
         .admin-box { max-width: 500px; margin: 0 auto; background: #111; padding: 30px; border-radius: 20px; border: 1px solid var(--accent); }
@@ -142,7 +141,7 @@
 
     <section class="hero">
         <div class="hero-bg-video">
-            <iframe src="https://player.vimeo.com/video/1097324794?background=1&autoplay=1&loop=1&muted=1&quality=720p" frameborder="0" allow="autoplay; fullscreen"></iframe>
+            <iframe src="https://vimeo.com/1221940499?share=copy&fl=sv&fe=ci" frameborder="0" allow="autoplay; fullscreen"></iframe>
         </div>
         <h1>Visual <br> <span class="hollow">Director.</span></h1>
     </section>
@@ -294,19 +293,23 @@
             document.body.style.overflow = 'auto';
         }
 
-        // SHA-256 Hash for password "mark2024"
+        // SHA-256 Hash للباسورد "mark2024"
         const ADMIN_HASH = "8ba7645d9e525a8167f226d7c7daeb1d167ef0d55e8841a0e7a8fbbf111664d0";
+        
         function openAdmin() { 
             const inputPass = prompt("Password:");
             if (inputPass) {
-                const inputHash = CryptoJS.SHA256(inputPass).toString();
-                if (inputHash === ADMIN_HASH) {
+                // تحويل المدخل إلى تشفير SHA-256 مع مطابقة الحروف الصغيرة وإزالة أي مسافات زائدة
+                const inputHash = CryptoJS.SHA256(inputPass.trim()).toString().toLowerCase();
+                
+                if (inputHash === ADMIN_HASH.toLowerCase()) {
                     document.getElementById('admin-panel').style.display = 'block';
                 } else {
                     alert("Incorrect Password!");
                 }
             }
         }
+        
         function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
         
         function addProject() {
