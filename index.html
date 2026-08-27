@@ -78,7 +78,6 @@
         .project-card { background: var(--glass); border-radius: 15px; padding: 10px; border: 1px solid var(--border); transition: 0.4s; height: fit-content; }
         .project-card:hover { border-color: var(--accent); transform: translateY(-5px); }
         
-        /* المقاسات مع تحسين التجاوب للإخفاء */
         .video-container { 
             position: relative; 
             width: 100%; 
@@ -141,7 +140,7 @@
 
     <section class="hero">
         <div class="hero-bg-video">
-            <iframe src="https://vimeo.com/1221940499?fl=ip&fe=ec" frameborder="0" allow="autoplay; fullscreen"></iframe>
+            <iframe src="https://player.vimeo.com/video/1221940499?background=1&autoplay=1&loop=1&muted=1&quality=720p" frameborder="0" allow="autoplay; fullscreen"></iframe>
         </div>
         <h1>Visual <br> <span class="hollow">Director.</span></h1>
     </section>
@@ -299,9 +298,7 @@
         function openAdmin() { 
             const inputPass = prompt("Password:");
             if (inputPass) {
-                // تحويل المدخل إلى تشفير SHA-256 مع مطابقة الحروف الصغيرة وإزالة أي مسافات زائدة
                 const inputHash = CryptoJS.SHA256(inputPass.trim()).toString().toLowerCase();
-                
                 if (inputHash === ADMIN_HASH.toLowerCase()) {
                     document.getElementById('admin-panel').style.display = 'block';
                 } else {
